@@ -6,7 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -15,34 +15,30 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
-
 public class KeycloakJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
-    private final JwtGrantedAuthoritiesConverter defaultGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-    
+    private final JwtGrantedAuthoritiesConverter defaultAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
         Collection<GrantedAuthority> authorities = Stream.concat(
-            defaultGrantedAuthoritiesConverter.convert(jwt).stream(),
-            extractResourceRoles(jwt).stream()
+                defaultAuthoritiesConverter.convert(jwt).stream(),
+                extractRealmRoles(jwt).stream()
         ).collect(Collectors.toSet());
 
         return new JwtAuthenticationToken(jwt, authorities, jwt.getClaimAsString("preferred_username"));
     }
-    
+
     @SuppressWarnings("unchecked")
     private Collection<GrantedAuthority> extractRealmRoles(Jwt jwt) {
-        Map<String, Object> realmAccess = jwt.getClaims().get("realm_access");
-
+        Map<String, Object> realmAccess = jwt.getClaim("realm_access");
         if (realmAccess == null || !realmAccess.containsKey("roles")) {
             return Collections.emptyList();
         }
 
-        List<String> roles ((List<String>) realmAccess.get("roles"));
+        List<String> roles = (List<String>) realmAccess.get("roles");
         return roles.stream()
-            .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
-            .collect(Collectors.toList());
+                .map(roleName -> new SimpleGrantedAuthority("ROLE_" + roleName.toUpperCase()))
+                .collect(Collectors.toList());
     }
-    
 }

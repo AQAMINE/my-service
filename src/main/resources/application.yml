@@ -2,8 +2,14 @@ server:
   port: 8081
 
 spring:
+  application:
+    name: my-service
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:8080/realms/my-service-realm
+
+keycloak:
+  client-id: my-service-backend
+  client-secret: xCudA4RhPUpiQMh8LUymWSS2KXxmLn9U
