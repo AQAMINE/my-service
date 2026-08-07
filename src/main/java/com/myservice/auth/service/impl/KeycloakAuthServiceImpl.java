@@ -4,6 +4,7 @@ import com.myservice.auth.dto.request.LoginRequest;
 import com.myservice.auth.dto.request.RefreshTokenRequest;
 import com.myservice.auth.dto.response.AuthResponse;
 import com.myservice.auth.service.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@RequiredArgsConstructor
 public class KeycloakAuthServiceImpl implements AuthService {
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
@@ -25,9 +27,6 @@ public class KeycloakAuthServiceImpl implements AuthService {
     
     private final RestTemplate restTemplate;
 
-    public KeycloakAuthServiceImpl(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
 
     @Override
     public AuthResponse login(LoginRequest loginRequest) {

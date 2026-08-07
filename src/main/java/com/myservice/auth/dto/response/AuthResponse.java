@@ -1,7 +1,15 @@
 package com.myservice.auth.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class AuthResponse {
 
     @JsonProperty("access_token")
@@ -19,45 +27,4 @@ public class AuthResponse {
     @JsonProperty("token_type")
     private String tokenType;
 
-    public AuthResponse() {}
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    public Long getExpiresIn() {
-        return expiresIn;
-    }
-
-    public void setExpiresIn(Long expiresIn) {
-        this.expiresIn = expiresIn;
-    }
-
-    public Long getRefreshExpiresIn() {
-        return refreshExpiresIn;
-    }
-
-    public void setRefreshExpiresIn(Long refreshExpiresIn) {
-        this.refreshExpiresIn = refreshExpiresIn;
-    }
-
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
-
-    public String getTokenType() {
-        return tokenType;
-    }
-
-    public void setTokenType(String tokenType) {
-        this.tokenType = tokenType;
-    }
 }
