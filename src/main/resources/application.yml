@@ -12,4 +12,4 @@ spring:
 
 keycloak:
   client-id: my-service-backend
-  client-secret: xCudA4RhPUpiQMh8LUymWSS2KXxmLn9U
+  client-secret: mdLeORaeMH78021SA9HyKvHFWZFwpfXd
