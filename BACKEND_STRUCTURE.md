@@ -31,6 +31,7 @@ my-service/
     │   │           ├── domain/                         # Cœur Métier Pure
     │   │           │   ├── exception/                  # Exceptions métier
     │   │           │   ├── model/                      # Entités / modèles du domaine
+    │   │           │   │   └── AuthTokens.java
     │   │           │   └── ports/                      # Contrats / Interfaces du domaine
     │   │           │       ├── in/                     # Use Cases (Cas d'utilisation)
     │   │           │       │   └── AuthUseCase.java
@@ -77,9 +78,9 @@ my-service/
 | Path | Role |
 |------|------|
 | `com.myservice` | Application entry point |
-| `com.myservice.domain.model` | Domain entities / models |
+| `com.myservice.domain.model` | Domain entities / models (`AuthTokens`) |
 | `com.myservice.domain.exception` | Domain / business exceptions |
-| `com.myservice.domain.ports.in` | Inbound ports / use-case interfaces (`AuthUseCase`) |
+| `com.myservice.domain.ports.in` | Inbound ports / use cases (`AuthUseCase` — primitives in, domain model out) |
 | `com.myservice.domain.ports.out` | Outbound ports (repositories, external gateways) |
 | `com.myservice.application.service` | Use-case implementations (`KeycloakAuthServiceImpl`) |
 | `com.myservice.infrastructure.adapters.in.web` | REST controllers |
@@ -93,9 +94,9 @@ my-service/
 
 | Layer | Package | Purpose |
 |-------|---------|---------|
-| Domain | `domain.model`, `domain.exception`, `domain.ports.in`, `domain.ports.out` | Models, exceptions, inbound & outbound ports |
+| Domain | `domain.model`, `domain.exception`, `domain.ports.in`, `domain.ports.out` | Models, exceptions, inbound & outbound ports (no infra DTOs) |
 | Application | `application.service` | Use-case implementations |
-| Infrastructure | `infrastructure.adapters`, `infrastructure.config` | Web adapters, DTOs, Spring/Keycloak wiring |
+| Infrastructure | `infrastructure.adapters`, `infrastructure.config` | Web adapters map DTOs ↔ domain; Spring/Keycloak wiring |
 
 ## File migration map
 

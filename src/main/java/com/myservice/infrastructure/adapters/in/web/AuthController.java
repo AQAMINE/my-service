@@ -1,5 +1,6 @@
 package com.myservice.infrastructure.adapters.in.web;
 
+import com.myservice.domain.model.AuthTokens;
 import com.myservice.domain.ports.in.AuthUseCase;
 import com.myservice.infrastructure.adapters.in.web.dto.request.LoginRequest;
 import com.myservice.infrastructure.adapters.in.web.dto.request.RefreshTokenRequest;
@@ -17,13 +18,26 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
-        AuthResponse response = authUseCase.login(loginRequest);
-        return ResponseEntity.ok(response);
+        AuthTokens tokens = authUseCase.login(loginRequest.getUsername(), loginRequest.getPassword());
+        return ResponseEntity.ok(toAuthResponse(tokens));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) {
-        AuthResponse response = authUseCase.refreshToken(refreshTokenRequest);
-        return ResponseEntity.ok(response);
+        AuthTokens tokens = authUseCase.refreshToken(refreshTokenRequest.getRefreshToken());
+        return ResponseEntity.ok(toAuthResponse(tokens));
+    }
+
+    private AuthResponse toAuthResponse(AuthTokens tokens) {
+        if (tokens == null) {
+            return null;
+        }
+        return new AuthResponse(
+                tokens.getAccessToken(),
+                tokens.getExpiresIn(),
+                tokens.getRefreshExpiresIn(),
+                tokens.getRefreshToken(),
+                tokens.getTokenType()
+        );
     }
 }

@@ -1,9 +1,9 @@
 package com.myservice.application.service;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.myservice.domain.model.AuthTokens;
 import com.myservice.domain.ports.in.AuthUseCase;
-import com.myservice.infrastructure.adapters.in.web.dto.request.LoginRequest;
-import com.myservice.infrastructure.adapters.in.web.dto.request.RefreshTokenRequest;
-import com.myservice.infrastructure.adapters.in.web.dto.response.AuthResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -28,41 +28,60 @@ public class KeycloakAuthServiceImpl implements AuthUseCase {
     private final RestTemplate restTemplate;
 
     @Override
-    public AuthResponse login(LoginRequest loginRequest) {
-        String tokenUrl = issuerUri + "/protocol/openid-connect/token";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
+    public AuthTokens login(String username, String password) {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "password");
         body.add("client_id", clientId);
         body.add("client_secret", clientSecret);
-        body.add("username", loginRequest.getUsername());
-        body.add("password", loginRequest.getPassword());
+        body.add("username", username);
+        body.add("password", password);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-
-        ResponseEntity<AuthResponse> response = restTemplate.postForEntity(tokenUrl, request, AuthResponse.class);
-        return response.getBody();
+        return requestTokens(body);
     }
 
     @Override
-    public AuthResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
+    public AuthTokens refreshToken(String refreshToken) {
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "refresh_token");
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("refresh_token", refreshToken);
+
+        return requestTokens(body);
+    }
+
+    private AuthTokens requestTokens(MultiValueMap<String, String> body) {
         String tokenUrl = issuerUri + "/protocol/openid-connect/token";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "refresh_token");
-        body.add("client_id", clientId);
-        body.add("client_secret", clientSecret);
-        body.add("refresh_token", refreshTokenRequest.getRefreshToken());
-
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+        ResponseEntity<KeycloakTokenResponse> response =
+                restTemplate.postForEntity(tokenUrl, request, KeycloakTokenResponse.class);
 
-        ResponseEntity<AuthResponse> response = restTemplate.postForEntity(tokenUrl, request, AuthResponse.class);
-        return response.getBody();
+        return toAuthTokens(response.getBody());
     }
+
+    private AuthTokens toAuthTokens(KeycloakTokenResponse response) {
+        if (response == null) {
+            return null;
+        }
+        return new AuthTokens(
+                response.accessToken(),
+                response.expiresIn(),
+                response.refreshExpiresIn(),
+                response.refreshToken(),
+                response.tokenType()
+        );
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record KeycloakTokenResponse(
+            @JsonProperty("access_token") String accessToken,
+            @JsonProperty("expires_in") Long expiresIn,
+            @JsonProperty("refresh_expires_in") Long refreshExpiresIn,
+            @JsonProperty("refresh_token") String refreshToken,
+            @JsonProperty("token_type") String tokenType
+    ) {}
 }
