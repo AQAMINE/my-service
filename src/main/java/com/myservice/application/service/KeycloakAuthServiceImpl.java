@@ -1,9 +1,9 @@
-package com.myservice.auth.service.impl;
+package com.myservice.application.service;
 
-import com.myservice.auth.dto.request.LoginRequest;
-import com.myservice.auth.dto.request.RefreshTokenRequest;
-import com.myservice.auth.dto.response.AuthResponse;
-import com.myservice.auth.service.AuthService;
+import com.myservice.domain.ports.in.AuthUseCase;
+import com.myservice.infrastructure.adapters.in.web.dto.request.LoginRequest;
+import com.myservice.infrastructure.adapters.in.web.dto.request.RefreshTokenRequest;
+import com.myservice.infrastructure.adapters.in.web.dto.response.AuthResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
-public class KeycloakAuthServiceImpl implements AuthService {
+public class KeycloakAuthServiceImpl implements AuthUseCase {
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
@@ -24,9 +24,8 @@ public class KeycloakAuthServiceImpl implements AuthService {
 
     @Value("${keycloak.client-secret}")
     private String clientSecret;
-    
-    private final RestTemplate restTemplate;
 
+    private final RestTemplate restTemplate;
 
     @Override
     public AuthResponse login(LoginRequest loginRequest) {

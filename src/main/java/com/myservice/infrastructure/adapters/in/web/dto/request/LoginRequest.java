@@ -1,4 +1,4 @@
-package com.myservice.auth.dto.request;
+package com.myservice.infrastructure.adapters.in.web.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -12,5 +12,4 @@ import lombok.Setter;
 public class LoginRequest {
     private String username;
     private String password;
-
 }

@@ -1,4 +1,4 @@
-package com.myservice.auth.dto.response;
+package com.myservice.infrastructure.adapters.in.web.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -26,5 +26,4 @@ public class AuthResponse {
 
     @JsonProperty("token_type")
     private String tokenType;
-
 }
