@@ -52,12 +52,14 @@ public class ExternalAccountEntity {
     @Column(name = "encryption_iv", nullable = false)
     private String encryptionIv;
 
+    @Column(length = 2048)
     private String link;
 
     private String description;
 
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive;
+    @Builder.Default
+    private Boolean isActive = true;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

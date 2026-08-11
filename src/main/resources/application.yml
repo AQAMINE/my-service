@@ -15,7 +15,7 @@ spring:
   # Configuration JPA / Hibernate
   jpa:
     hibernate:
-      ddl-auto: update # Valide que le schéma Flyway correspond aux @Entity (sécurisé pour la prod)
+      ddl-auto: validate # Valide que le schéma Flyway correspond aux @Entity (sécurisé pour la prod)
     show-sql: true
     properties:
       hibernate:

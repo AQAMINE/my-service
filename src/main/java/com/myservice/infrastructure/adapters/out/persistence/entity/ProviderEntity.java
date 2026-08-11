@@ -30,24 +30,26 @@ public class ProviderEntity {
     private UUID id;
 
     @Column(name = "user_id")
-    private UUID userId;
+    private UUID userId; // NULL pour les providers système globaux
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String slug;
 
-    @Column(name = "website_url")
+    @Column(name = "website_url", length = 2048)
     private String websiteUrl;
 
+    @Column(length = 50)
     private String color;
 
-    @Column(name = "logo_url")
+    @Column(name = "logo_url", length = 2048)
     private String logoUrl;
 
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive;
+    @Builder.Default
+    private Boolean isActive = true;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

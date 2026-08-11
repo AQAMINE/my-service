@@ -30,12 +30,12 @@ public class AccountCategoryEntity {
     private UUID id;
 
     @Column(name = "user_id")
-    private UUID userId;
+    private UUID userId; // NULL pour les catégories système globales
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String slug;
 
     private String description;
