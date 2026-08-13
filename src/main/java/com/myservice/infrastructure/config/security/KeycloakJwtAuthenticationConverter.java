@@ -1,4 +1,4 @@
-package com.myservice.infrastructure.config;
+package com.myservice.infrastructure.config.security;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

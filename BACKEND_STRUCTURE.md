@@ -110,15 +110,29 @@ my-service/
     │   │           └── infrastructure/                 # Adaptateurs & Framework (Spring/Keycloak)
     │   │               ├── adapters/
     │   │               │   ├── in/
-    │   │               │   │   └── web/                # Contrôleurs REST & DTOs
+    │   │               │   │   └── web/                # Contrôleurs REST, DTOs & mappers
     │   │               │   │       ├── AuthController.java
     │   │               │   │       ├── TestController.java
-    │   │               │   │       └── dto/
-    │   │               │   │           ├── request/
-    │   │               │   │           │   ├── LoginRequest.java
-    │   │               │   │           │   └── RefreshTokenRequest.java
-    │   │               │   │           └── response/
-    │   │               │   │               └── AuthResponse.java
+    │   │               │   │       ├── controller/
+    │   │               │   │       │   ├── CategoryController.java
+    │   │               │   │       │   ├── ExternalAccountController.java
+    │   │               │   │       │   └── ProviderController.java
+    │   │               │   │       ├── dto/
+    │   │               │   │       │   ├── request/
+    │   │               │   │       │   │   ├── CreateCategoryRequest.java
+    │   │               │   │       │   │   ├── CreateExternalAccountRequest.java
+    │   │               │   │       │   │   ├── CreateProviderRequest.java
+    │   │               │   │       │   │   ├── LoginRequest.java
+    │   │               │   │       │   │   └── RefreshTokenRequest.java
+    │   │               │   │       │   └── response/
+    │   │               │   │       │       ├── AuthResponse.java
+    │   │               │   │       │       ├── CategoryResponse.java
+    │   │               │   │       │       ├── ExternalAccountResponse.java
+    │   │               │   │       │       └── ProviderResponse.java
+    │   │               │   │       └── mapper/
+    │   │               │   │           ├── CategoryWebMapper.java
+    │   │               │   │           ├── ExternalAccountWebMapper.java
+    │   │               │   │           └── ProviderWebMapper.java
     │   │               │   │
     │   │               │   └── out/
     │   │               │       └── persistence/         # Adaptateur JPA / PostgreSQL
@@ -144,9 +158,12 @@ my-service/
     │   │               │               └── SpringDataUserRepository.java
     │   │               │
     │   │               └── config/                     # Configurations Spring
-    │   │                   ├── JacksonConfig.java
-    │   │                   ├── KeycloakJwtAuthenticationConverter.java
-    │   │                   └── SecurityConfig.java
+    │   │                   ├── security/
+    │   │                   │   ├── KeycloakJwtAuthenticationConverter.java
+    │   │                   │   └── SecurityConfig.java
+    │   │                   └── web/
+    │   │                       ├── JacksonConfig.java
+    │   │                       └── WebConfig.java
     │   │
     │   └── resources/
     │       ├── application.yml
@@ -220,9 +237,21 @@ my-service/
 |------|------|
 | `AuthController.java` | REST `/api/auth`; maps `LoginRequest` / `RefreshTokenRequest` ↔ `AuthUseCase` / `AuthResponse` |
 | `TestController.java` | Public / private hello endpoints for security smoke tests |
+| `CategoryController.java` | REST `/api/v1/categories` (list / create / delete; header `X-User-Id`) |
+| `ProviderController.java` | REST `/api/v1/providers` (list / create / delete; header `X-User-Id`) |
+| `ExternalAccountController.java` | REST `/api/v1/accounts` (list with optional filters / create / delete; header `X-User-Id`) |
 | `LoginRequest.java` | HTTP body for login |
 | `RefreshTokenRequest.java` | HTTP body for token refresh |
+| `CreateCategoryRequest.java` | Validated HTTP body to create a category |
+| `CreateProviderRequest.java` | Validated HTTP body to create a provider |
+| `CreateExternalAccountRequest.java` | Validated HTTP body to create an external account (incl. `rawPassword`) |
 | `AuthResponse.java` | HTTP JSON token response (`access_token`, `refresh_token`, …) |
+| `CategoryResponse.java` | HTTP JSON category response |
+| `ProviderResponse.java` | HTTP JSON provider response |
+| `ExternalAccountResponse.java` | HTTP JSON external account response (no secrets) |
+| `CategoryWebMapper.java` | Maps `CreateCategoryRequest` / `AccountCategory` ↔ `CategoryResponse` |
+| `ProviderWebMapper.java` | Maps `CreateProviderRequest` / `Provider` ↔ `ProviderResponse` |
+| `ExternalAccountWebMapper.java` | Maps `CreateExternalAccountRequest` / `ExternalAccount` ↔ `ExternalAccountResponse` |
 
 ### Infrastructure — persistence adapters (out)
 
@@ -259,9 +288,10 @@ my-service/
 
 | File | Role |
 |------|------|
-| `SecurityConfig.java` | Security filter chain, public routes, `RestTemplate` bean |
-| `KeycloakJwtAuthenticationConverter.java` | Maps Keycloak JWT realm roles to Spring authorities |
-| `JacksonConfig.java` | Primary `ObjectMapper` (JavaTimeModule, no date timestamps, ignore unknown props) |
+| `SecurityConfig.java` | Security filter chain, CORS, public routes, `RestTemplate` bean (`config.security`) |
+| `KeycloakJwtAuthenticationConverter.java` | Maps Keycloak JWT realm roles to Spring authorities (`config.security`) |
+| `JacksonConfig.java` | Primary `ObjectMapper` (JavaTimeModule, no date timestamps, ignore unknown props) (`config.web`) |
+| `WebConfig.java` | CORS mappings for `/api/**` (Angular `localhost:4200`) (`config.web`) |
 
 ### Resources
 
@@ -283,13 +313,16 @@ my-service/
 | `com.myservice.domain.ports.out` | Outbound repository & encryption ports (incl. gRPC encryption) |
 | `com.myservice.application.ports.in` | Application use-case ports (categories, providers, external accounts) |
 | `com.myservice.application.service` | Use-case / auth service implementations |
-| `com.myservice.infrastructure.adapters.in.web` | REST controllers |
-| `com.myservice.infrastructure.adapters.in.web.dto.*` | HTTP request / response DTOs |
+| `com.myservice.infrastructure.adapters.in.web` | Auth / test REST controllers |
+| `com.myservice.infrastructure.adapters.in.web.controller` | Domain REST controllers (`/api/v1/*`) |
+| `com.myservice.infrastructure.adapters.in.web.dto.*` | HTTP request / response DTOs (Jakarta Validation) |
+| `com.myservice.infrastructure.adapters.in.web.mapper` | Web DTO ↔ domain mappers |
 | `com.myservice.infrastructure.adapters.out.persistence.adapter` | Port implementations (hexagonal outbound adapters) |
 | `com.myservice.infrastructure.adapters.out.persistence.mapper` | Domain ↔ JPA entity mappers |
 | `com.myservice.infrastructure.adapters.out.persistence.entity` | JPA entities |
 | `com.myservice.infrastructure.adapters.out.persistence.repository` | Spring Data JPA repositories |
-| `com.myservice.infrastructure.config` | Spring Security & JWT config |
+| `com.myservice.infrastructure.config.security` | Spring Security & JWT converter |
+| `com.myservice.infrastructure.config.web` | Jackson & Web MVC / CORS config |
 | `src/main/resources/db/migration` | Flyway SQL migrations |
 | `src/test/java` | Tests |
 
@@ -297,7 +330,7 @@ my-service/
 
 | File | Description |
 |------|-------------|
-| `pom.xml` | Maven deps (Web, OAuth2, JPA, PostgreSQL, Flyway, Lombok) |
+| `pom.xml` | Maven deps (Web, OAuth2, JPA, PostgreSQL, Flyway, Validation, Lombok) |
 | `Dockerfile` | Multi-stage build (Temurin 21) |
 | `mvnw` / `mvnw.cmd` | Maven Wrapper scripts |
 | `.dockerignore` | Files excluded from Docker build context |

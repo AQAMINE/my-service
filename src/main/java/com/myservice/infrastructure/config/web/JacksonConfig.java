@@ -1,4 +1,4 @@
-package com.myservice.infrastructure.config;
+package com.myservice.infrastructure.config.web;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
