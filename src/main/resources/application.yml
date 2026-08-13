@@ -7,15 +7,15 @@ spring:
 
   # Configuration de la Datasource PostgreSQL
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:myservicedb}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://localhost:5435/myservicedb
+    username: postgres
+    password: postgrespassword
     driver-class-name: org.postgresql.Driver
 
   # Configuration JPA / Hibernate
   jpa:
     hibernate:
-      ddl-auto: validate # Valide que le schéma Flyway correspond aux @Entity (sécurisé pour la prod)
+      ddl-auto: update # Préférable en DEV local pour créer/aligner les tables automatiquement
     show-sql: true
     properties:
       hibernate:
@@ -29,12 +29,20 @@ spring:
     baseline-on-migrate: true
     out-of-order: false
 
+  # Configuration Sécurité OAuth2 / Keycloak
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/my-service-realm
+          issuer-uri: http://localhost:8085/realms/my-service-realm
 
 keycloak:
   client-id: my-service-backend
-  client-secret: mdLeORaeMH78021SA9HyKvHFWZFwpfXd
+  client-secret: nBBDagDMZTnaCMXm1bK4WRnrYZYQf5jd
+
+# Configuration gRPC Client
+grpc:
+  client:
+    crypto-service:
+      address: 'static://${GRPC_CLIENT_CRYPTO_HOST:localhost}:${GRPC_CLIENT_CRYPTO_PORT:50051}'
+      negotiation-type: plaintext

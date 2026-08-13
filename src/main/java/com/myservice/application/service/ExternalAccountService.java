@@ -2,6 +2,7 @@ package com.myservice.application.service;
 
 import com.myservice.application.ports.in.ExternalAccountUseCase;
 import com.myservice.domain.model.ExternalAccount;
+import com.myservice.domain.ports.out.EncryptionServicePort;
 import com.myservice.domain.ports.out.ExternalAccountRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,13 +18,17 @@ import java.util.UUID;
 public class ExternalAccountService implements ExternalAccountUseCase {
 
     private final ExternalAccountRepositoryPort externalAccountRepositoryPort;
+    private final EncryptionServicePort encryptionServicePort; // <-- Injecté ici !
 
     @Override
     public ExternalAccount createAccount(ExternalAccount account, String rawPassword) {
-        // TODO: Appeler le port gRPC pour chiffrer le mot de passe si le client gRPC est actif
-        // Ex: var cryptoResponse = cryptoPort.encrypt(rawPassword);
-        // account.setEncryptedPassword(cryptoResponse.getEncryptedPassword());
-        // account.setEncryptionIv(cryptoResponse.getIv());
+        if (rawPassword != null && !rawPassword.isBlank()) {
+            // Appel au microservice Python gRPC via l'adaptateur
+            var encryptionResult = encryptionServicePort.encrypt(rawPassword);
+            
+            account.setEncryptedPassword(encryptionResult.cipherTextBase64());
+            account.setEncryptionIv(encryptionResult.ivBase64());
+        }
 
         return externalAccountRepositoryPort.save(account);
     }
