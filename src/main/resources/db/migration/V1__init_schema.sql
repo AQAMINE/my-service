@@ -1,4 +1,7 @@
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE SCHEMA IF NOT EXISTS public;
+SET search_path TO public;
+
+-- gen_random_uuid() is built-in on PostgreSQL 13+ (no uuid-ossp needed)
 
 CREATE TABLE users (
     id UUID PRIMARY KEY, -- Clé 'sub' de Keycloak
