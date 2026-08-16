@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter; // IMPORT AJOUTÉ
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.client.RestTemplate;
 
@@ -17,7 +18,7 @@ import org.springframework.web.client.RestTemplate;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, UserSyncFilter userSyncFilter) throws Exception {
         http
             // 1. Activer le support CORS configuré dans WebConfig
             .cors(Customizer.withDefaults())
@@ -36,7 +37,7 @@ public class SecurityConfig {
                 // Endpoints publics & d'authentification Keycloak
                 .requestMatchers("/api/public/**", "/api/auth/**").permitAll()
                 
-                // Documentation Swagger / OpenApi / Actuator (optionnel)
+                // Documentation Swagger / OpenApi / Actuator
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/actuator/**").permitAll()
                 
                 // Tout le reste exige une authentification
@@ -46,7 +47,10 @@ public class SecurityConfig {
             // 5. Integration Keycloak Resource Server (avec ton converter)
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt.jwtAuthenticationConverter(new KeycloakJwtAuthenticationConverter()))
-            );
+            )
+
+            // 6. Ajouter le filtre JIT Sync APRES la vérification du Token Bearer
+            .addFilterAfter(userSyncFilter, BearerTokenAuthenticationFilter.class);
 
         return http.build();
     }

@@ -25,7 +25,7 @@ public class ExternalAccountService implements ExternalAccountUseCase {
         if (rawPassword != null && !rawPassword.isBlank()) {
             // Appel au microservice Python gRPC via l'adaptateur
             var encryptionResult = encryptionServicePort.encrypt(rawPassword);
-            
+
             account.setEncryptedPassword(encryptionResult.cipherTextBase64());
             account.setEncryptionIv(encryptionResult.ivBase64());
         }
@@ -60,5 +60,37 @@ public class ExternalAccountService implements ExternalAccountUseCase {
     @Override
     public void deleteAccount(UUID id) {
         externalAccountRepositoryPort.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String revealPassword(UUID accountId, UUID userId) {
+        // 1. Récupérer le compte depuis la BDD via le port de persistence
+        ExternalAccount account = externalAccountRepositoryPort.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Compte introuvable : " + accountId));
+
+        // 2. Vérification de sécurité multi-tenant (l'utilisateur doit être le
+        // propriétaire)
+        if (!account.getUserId().equals(userId)) {
+            throw new SecurityException("Accès non autorisé à ce compte");
+        }
+
+        // 3. Déchiffrement gRPC via EncryptionServicePort
+        return encryptionServicePort.decrypt(
+                account.getEncryptedPassword(),
+                account.getEncryptionIv());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExternalAccount getAccountByIdAndUserId(UUID accountId, UUID userId) {
+        ExternalAccount account = externalAccountRepositoryPort.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Compte introuvable : " + accountId));
+
+        if (!account.getUserId().equals(userId)) {
+            throw new SecurityException("Accès non autorisé à ce compte");
+        }
+
+        return account;
     }
 }

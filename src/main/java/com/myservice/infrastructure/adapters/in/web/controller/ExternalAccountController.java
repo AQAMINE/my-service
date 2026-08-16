@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.myservice.infrastructure.adapters.in.web.dto.response.AccountPasswordResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -41,6 +42,24 @@ public class ExternalAccountController {
         }
 
         return ResponseEntity.ok(accounts);
+    }
+
+    @GetMapping("/{id}/password")
+    public ResponseEntity<AccountPasswordResponse> getAccountPassword(
+            @PathVariable UUID id,
+            @RequestHeader("X-User-Id") UUID userId) {
+
+        String rawPassword = accountUseCase.revealPassword(id, userId);
+        return ResponseEntity.ok(new AccountPasswordResponse(rawPassword));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ExternalAccountResponse> getAccountById(
+            @PathVariable UUID id,
+            @RequestHeader("X-User-Id") UUID userId) {
+
+        var account = accountUseCase.getAccountByIdAndUserId(id, userId);
+        return ResponseEntity.ok(mapper.toResponse(account));
     }
 
     @PostMapping
