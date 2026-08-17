@@ -1,7 +1,7 @@
 # my-service — Backend Structure
 
 Spring Boot 4.1 backend (`com.my.service` / `com.myservice`), Java 21, Maven.
-Auth via Keycloak (OAuth2 resource server). Schema owned by Flyway (PostgreSQL).
+Auth via Keycloak (OAuth2 resource server). Authenticated users are JIT-synced into `users` by `UserSyncFilter`.
 Persistence via Spring Data JPA. Hexagonal architecture (ports & adapters).
 Password encryption via a Python gRPC microservice (`my-service-crypto`).
 
@@ -43,7 +43,7 @@ Migrations live under `src/main/resources/db/migration/`:
 
 | Table | Description |
 |-------|-------------|
-| `users` | JIT-synced via Keycloak (`id` UUID = Keycloak `sub`) |
+| `users` | JIT-synced from JWT by `UserSyncFilter` (`id` UUID = Keycloak `sub`) |
 | `account_categories` | Global (`user_id IS NULL`) and user-owned. Unique `(user_id, slug)` (`NULLS NOT DISTINCT`) |
 | `providers` | Global and custom providers (`color`, `website_url`, `logo_url`). Unique `(user_id, slug)` |
 | `external_accounts` | Credentials (`encrypted_password` + `encryption_iv`) linked to user, category, and provider |
@@ -82,8 +82,12 @@ Protected (JWT Bearer):
 | `GET` / `POST` / `DELETE` | `/api/v1/categories` | `X-User-Id` = JWT `sub` (UUID) |
 | `GET` / `POST` / `DELETE` | `/api/v1/providers` | `X-User-Id` = JWT `sub` (UUID) |
 | `GET` / `POST` / `DELETE` | `/api/v1/accounts` | `X-User-Id` = JWT `sub` (UUID) |
+| `GET` | `/api/v1/accounts/{id}` | `X-User-Id` = JWT `sub` (owner check) |
+| `GET` | `/api/v1/accounts/{id}/password` | `X-User-Id` = JWT `sub`; decrypts via gRPC |
 
 Missing JWT → **401**. Authenticated but missing/invalid `X-User-Id` → **400**.
+
+First authenticated request for a new Keycloak user inserts a `users` row (JIT sync). Password reveal returns `{ "password": "..." }` and is owner-scoped.
 
 Login body: `{ "username", "password" }`. Refresh body: `{ "refreshToken" }`.
 
@@ -146,7 +150,8 @@ my-service/
     │   │       └── config/
     │   │           ├── security/
     │   │           │   ├── KeycloakJwtAuthenticationConverter.java
-    │   │           │   └── SecurityConfig.java
+    │   │           │   ├── SecurityConfig.java
+    │   │           │   └── UserSyncFilter.java
     │   │           └── web/
     │   │               ├── JacksonConfig.java
     │   │               └── WebConfig.java
@@ -183,10 +188,10 @@ Generated gRPC stubs from `crypto.proto` land in `com.myservice.infrastructure.a
 | `MyServiceApplication.java` | Spring Boot entry point |
 | `AccountCategoryUseCase.java` | Create / list / get / delete categories |
 | `ProviderUseCase.java` | Create / list / get / delete providers |
-| `ExternalAccountUseCase.java` | Create (raw password) / list / get / delete accounts |
+| `ExternalAccountUseCase.java` | Create / list / get by id (owner) / reveal password / delete |
 | `AccountCategoryService.java` | Implements category use case via `AccountCategoryRepositoryPort` |
 | `ProviderService.java` | Implements provider use case via `ProviderRepositoryPort` |
-| `ExternalAccountService.java` | Encrypts password via `EncryptionServicePort`, then persists |
+| `ExternalAccountService.java` | Encrypts on create; decrypts on `revealPassword`; owner checks |
 | `KeycloakAuthServiceImpl.java` | Implements `AuthUseCase`; Keycloak token endpoint → `AuthTokens` |
 | `GrpcTestRunner.java` | Dev helper to ping the gRPC crypto client |
 
@@ -205,7 +210,7 @@ Generated gRPC stubs from `crypto.proto` land in `com.myservice.infrastructure.a
 | File | Role |
 |------|------|
 | `AuthUseCase.java` | Login / refresh |
-| `UserRepositoryPort.java` | Persist / load users |
+| `UserRepositoryPort.java` | Persist / load users (`existsById` used by JIT sync) |
 | `AccountCategoryRepositoryPort.java` | Categories (global + available for user) |
 | `ProviderRepositoryPort.java` | Providers (global + available for user) |
 | `ExternalAccountRepositoryPort.java` | Accounts by user / category / provider |
@@ -219,11 +224,12 @@ Generated gRPC stubs from `crypto.proto` land in `com.myservice.infrastructure.a
 | `TestController.java` | `/api/public/hello`, `/api/private/hello` |
 | `CategoryController.java` | `/api/v1/categories` — requires `X-User-Id` |
 | `ProviderController.java` | `/api/v1/providers` — requires `X-User-Id` |
-| `ExternalAccountController.java` | `/api/v1/accounts` — requires `X-User-Id`; optional `categoryId` / `providerId` |
+| `ExternalAccountController.java` | `/api/v1/accounts` — list/create/delete; `GET /{id}`; `GET /{id}/password` |
 | `LoginRequest.java` / `RefreshTokenRequest.java` | Auth HTTP bodies |
 | `Create*Request.java` | Validated create bodies (`CreateExternalAccountRequest` includes `rawPassword`) |
 | `AuthResponse.java` | JSON tokens (`access_token`, `refresh_token`, `expires_in`, …) |
-| `*Response.java` | HTTP JSON (accounts never return secrets) |
+| `AccountPasswordResponse.java` | `{ "password" }` from `GET /{id}/password` (plaintext after gRPC decrypt) |
+| `*Response.java` | HTTP JSON (list/detail accounts never return secrets) |
 | `*WebMapper.java` | Request / domain / response mapping |
 
 ### Infrastructure — persistence (out)
@@ -246,7 +252,8 @@ Generated gRPC stubs from `crypto.proto` land in `com.myservice.infrastructure.a
 
 | File | Role |
 |------|------|
-| `SecurityConfig.java` | Stateless filter chain, CORS, public `/api/auth/**` & `/api/public/**`, JWT resource server, `RestTemplate` |
+| `SecurityConfig.java` | Stateless filter chain, public `/api/auth/**` & `/api/public/**`, JWT resource server, `UserSyncFilter` after `BearerTokenAuthenticationFilter`, `RestTemplate` |
+| `UserSyncFilter.java` | After JWT auth: if `users` row missing, insert from JWT claims (`sub`, email, given/family name); in-memory id cache |
 | `KeycloakJwtAuthenticationConverter.java` | Realm roles → `ROLE_*` authorities |
 | `JacksonConfig.java` | `ObjectMapper` (JavaTimeModule, no timestamps, ignore unknown) |
 | `WebConfig.java` | CORS for `/api/**` (Angular `localhost:4200`) |
@@ -277,7 +284,7 @@ Generated gRPC stubs from `crypto.proto` land in `com.myservice.infrastructure.a
 | `com.myservice.infrastructure.adapters.in.web.mapper` | Web mappers |
 | `com.myservice.infrastructure.adapters.out.grpc` | Encryption gRPC adapter |
 | `com.myservice.infrastructure.adapters.out.persistence.*` | JPA adapters / entities / repos |
-| `com.myservice.infrastructure.config.security` | Security & JWT converter |
+| `com.myservice.infrastructure.config.security` | Security, JWT converter, JIT `UserSyncFilter` |
 | `com.myservice.infrastructure.config.web` | Jackson & CORS |
 | `src/main/proto` | gRPC protobuf |
 | `src/main/resources/db/migration` | Flyway SQL |
