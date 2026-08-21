@@ -41,8 +41,12 @@ spring:
           issuer-uri: http://localhost:8085/realms/my-service-realm
 
 keycloak:
+  server-url: http://localhost:8085
+  realm: my-service-realm
   client-id: my-service-backend
   client-secret: nBBDagDMZTnaCMXm1bK4WRnrYZYQf5jd
+  username: admin
+  password: admin
 
 # Configuration gRPC Client
 grpc:

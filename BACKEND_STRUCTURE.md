@@ -149,6 +149,8 @@ my-service/
     │   │       │           └── repository/
     │   │       └── config/
     │   │           ├── security/
+    │   │           │   ├── IsAdmin.java
+    │   │           │   ├── IsUserOrAdmin.java
     │   │           │   ├── KeycloakJwtAuthenticationConverter.java
     │   │           │   ├── SecurityConfig.java
     │   │           │   └── UserSyncFilter.java
@@ -255,6 +257,8 @@ Generated gRPC stubs from `crypto.proto` land in `com.myservice.infrastructure.a
 | `SecurityConfig.java` | Stateless filter chain, public `/api/auth/**` & `/api/public/**`, JWT resource server, `UserSyncFilter` after `BearerTokenAuthenticationFilter`, `RestTemplate` |
 | `UserSyncFilter.java` | After JWT auth: if `users` row missing, insert from JWT claims (`sub`, email, given/family name); in-memory id cache |
 | `KeycloakJwtAuthenticationConverter.java` | Realm roles → `ROLE_*` authorities |
+| `IsAdmin.java` | `@PreAuthorize("hasRole('ADMIN')")` — put on controllers/methods |
+| `IsUserOrAdmin.java` | `@PreAuthorize("hasAnyRole('USER', 'ADMIN')")` — put on controllers/methods |
 | `JacksonConfig.java` | `ObjectMapper` (JavaTimeModule, no timestamps, ignore unknown) |
 | `WebConfig.java` | CORS for `/api/**` (Angular `localhost:4200`) |
 
