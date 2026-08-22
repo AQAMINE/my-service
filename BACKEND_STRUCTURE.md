@@ -134,9 +134,8 @@ my-service/
     │   │   └── infrastructure/
     │   │       ├── adapters/
     │   │       │   ├── in/web/
-    │   │       │   │   ├── AuthController.java
     │   │       │   │   ├── TestController.java
-    │   │       │   │   ├── controller/
+    │   │       │   │   ├── controller/          # AuthController + /api/v1/*
     │   │       │   │   ├── dto/request|response/
     │   │       │   │   └── mapper/
     │   │       │   └── out/
@@ -222,7 +221,7 @@ Generated gRPC stubs from `crypto.proto` land in `com.myservice.infrastructure.a
 
 | File | Role |
 |------|------|
-| `AuthController.java` | `/api/auth` login & refresh |
+| `AuthController.java` | `/api/auth` login & refresh (`controller` package) |
 | `TestController.java` | `/api/public/hello`, `/api/private/hello` |
 | `CategoryController.java` | `/api/v1/categories` — requires `X-User-Id` |
 | `ProviderController.java` | `/api/v1/providers` — requires `X-User-Id` |
@@ -282,8 +281,8 @@ Generated gRPC stubs from `crypto.proto` land in `com.myservice.infrastructure.a
 | `com.myservice.domain.ports.out` | Repository & encryption ports |
 | `com.myservice.application.ports.in` | Category / provider / account use cases |
 | `com.myservice.application.service` | Use-case implementations |
-| `com.myservice.infrastructure.adapters.in.web` | Auth / test controllers |
-| `com.myservice.infrastructure.adapters.in.web.controller` | `/api/v1/*` |
+| `com.myservice.infrastructure.adapters.in.web` | Test / misc web adapters |
+| `com.myservice.infrastructure.adapters.in.web.controller` | REST controllers (`/api/auth`, `/api/v1/*`) |
 | `com.myservice.infrastructure.adapters.in.web.dto.*` | HTTP DTOs |
 | `com.myservice.infrastructure.adapters.in.web.mapper` | Web mappers |
 | `com.myservice.infrastructure.adapters.out.grpc` | Encryption gRPC adapter |
