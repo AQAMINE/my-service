@@ -12,6 +12,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.myservice.domain.ports.out.UserRepositoryPort;
 
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+
+
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +29,7 @@ public class UserManagementService {
     @Value("${keycloak.realm}")
     private String realm;
 
+    @CacheEvict(value = "users", allEntries = true)
     public void createUser(CreateUserRequest request) {
         // 1. Définir le mot de passe
         CredentialRepresentation passwordCred = new CredentialRepresentation();
@@ -48,6 +54,7 @@ public class UserManagementService {
         }
     }
 
+    @Cacheable(value = "users", key = "'all'")
     public List<UserResponse> getAllUsers() {
         // 1. Récupérer la liste des représentations d'utilisateurs depuis Keycloak
         List<UserRepresentation> users = keycloakAdmin.realm(realm).users().list();
@@ -67,6 +74,7 @@ public class UserManagementService {
     // Injection du UserRepositoryPort dans UserManagementService
     private final UserRepositoryPort userRepositoryPort;
 
+    @CacheEvict(value = "users", allEntries = true)
     public void toggleUserStatus(UUID userId, boolean enabled) {
         String userIdStr = userId.toString();
 

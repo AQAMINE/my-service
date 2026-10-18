@@ -33,6 +33,20 @@ spring:
     baseline-on-migrate: false
     out-of-order: false
 
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: 6379
+      username: ${SPRING_REDIS_USERNAME:default} # "default" pour Redis 6+
+      password: ${SPRING_REDIS_PASSWORD:redispassword}
+      timeout: 2000ms
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000 # 1 heure
+      cache-null-values: false
+
   # Configuration Sécurité OAuth2 / Keycloak
   security:
     oauth2:
