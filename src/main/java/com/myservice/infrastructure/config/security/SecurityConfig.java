@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter; // IMPORT AJOUTÉ
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.client.RestTemplate;
 
@@ -37,8 +37,15 @@ public class SecurityConfig {
                 // Endpoints publics & d'authentification Keycloak
                 .requestMatchers("/api/public/**", "/api/auth/**").permitAll()
                 
-                // Documentation Swagger / OpenApi / Actuator
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/actuator/**").permitAll()
+                // Documentation Swagger / OpenApi / Actuator (Ajusté pour inclure swagger-ui.html)
+                .requestMatchers(
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/swagger-resources/**",
+                    "/webjars/**",
+                    "/actuator/**"
+                ).permitAll()
                 
                 // Tout le reste exige une authentification
                 .anyRequest().authenticated()
@@ -55,7 +62,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Bean requis pour KeycloakAuthServiceImpl
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
