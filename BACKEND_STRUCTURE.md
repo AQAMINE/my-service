@@ -134,9 +134,8 @@ my-service/
     │   │   └── infrastructure/
     │   │       ├── adapters/
     │   │       │   ├── in/web/
-    │   │       │   │   ├── AuthController.java
     │   │       │   │   ├── TestController.java
-    │   │       │   │   ├── controller/
+    │   │       │   │   ├── controller/          # AuthController + /api/v1/*
     │   │       │   │   ├── dto/request|response/
     │   │       │   │   └── mapper/
     │   │       │   └── out/
@@ -149,6 +148,8 @@ my-service/
     │   │       │           └── repository/
     │   │       └── config/
     │   │           ├── security/
+    │   │           │   ├── IsAdmin.java
+    │   │           │   ├── IsUserOrAdmin.java
     │   │           │   ├── KeycloakJwtAuthenticationConverter.java
     │   │           │   ├── SecurityConfig.java
     │   │           │   └── UserSyncFilter.java
@@ -220,7 +221,7 @@ Generated gRPC stubs from `crypto.proto` land in `com.myservice.infrastructure.a
 
 | File | Role |
 |------|------|
-| `AuthController.java` | `/api/auth` login & refresh |
+| `AuthController.java` | `/api/auth` login & refresh (`controller` package) |
 | `TestController.java` | `/api/public/hello`, `/api/private/hello` |
 | `CategoryController.java` | `/api/v1/categories` — requires `X-User-Id` |
 | `ProviderController.java` | `/api/v1/providers` — requires `X-User-Id` |
@@ -255,6 +256,8 @@ Generated gRPC stubs from `crypto.proto` land in `com.myservice.infrastructure.a
 | `SecurityConfig.java` | Stateless filter chain, public `/api/auth/**` & `/api/public/**`, JWT resource server, `UserSyncFilter` after `BearerTokenAuthenticationFilter`, `RestTemplate` |
 | `UserSyncFilter.java` | After JWT auth: if `users` row missing, insert from JWT claims (`sub`, email, given/family name); in-memory id cache |
 | `KeycloakJwtAuthenticationConverter.java` | Realm roles → `ROLE_*` authorities |
+| `IsAdmin.java` | `@PreAuthorize("hasRole('ADMIN')")` — put on controllers/methods |
+| `IsUserOrAdmin.java` | `@PreAuthorize("hasAnyRole('USER', 'ADMIN')")` — put on controllers/methods |
 | `JacksonConfig.java` | `ObjectMapper` (JavaTimeModule, no timestamps, ignore unknown) |
 | `WebConfig.java` | CORS for `/api/**` (Angular `localhost:4200`) |
 
@@ -278,8 +281,8 @@ Generated gRPC stubs from `crypto.proto` land in `com.myservice.infrastructure.a
 | `com.myservice.domain.ports.out` | Repository & encryption ports |
 | `com.myservice.application.ports.in` | Category / provider / account use cases |
 | `com.myservice.application.service` | Use-case implementations |
-| `com.myservice.infrastructure.adapters.in.web` | Auth / test controllers |
-| `com.myservice.infrastructure.adapters.in.web.controller` | `/api/v1/*` |
+| `com.myservice.infrastructure.adapters.in.web` | Test / misc web adapters |
+| `com.myservice.infrastructure.adapters.in.web.controller` | REST controllers (`/api/auth`, `/api/v1/*`) |
 | `com.myservice.infrastructure.adapters.in.web.dto.*` | HTTP DTOs |
 | `com.myservice.infrastructure.adapters.in.web.mapper` | Web mappers |
 | `com.myservice.infrastructure.adapters.out.grpc` | Encryption gRPC adapter |

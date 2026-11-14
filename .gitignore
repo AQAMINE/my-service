@@ -10,8 +10,15 @@ buildNumber.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
 
+# Secrets
+.env
+.env.*
+!.env.example
+
 # Eclipse m2e generated files
 # Eclipse Core
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+.cursor/debug-e127a9.log
+.DS_Store

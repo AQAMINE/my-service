@@ -11,21 +11,8 @@
 	<groupId>com.my.service</groupId>
 	<artifactId>my-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
+	<name>aegis-vault</name>
+	<description>Aegis Vault — encrypted credentials API (personal security suite)</description>
 	<properties>
 		<java.version>21</java.version>
 	</properties>
@@ -56,6 +43,11 @@
 			<artifactId>jackson-datatype-jsr310</artifactId>
 		</dependency>
 		<dependency>
+    <groupId>org.keycloak</groupId>
+    <artifactId>keycloak-admin-client</artifactId>
+    <version>24.0.0</version>
+</dependency>
+		<dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
@@ -83,6 +75,15 @@
 		<dependency>
 			<groupId>jakarta.annotation</groupId>
 			<artifactId>jakarta.annotation-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.5.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
