@@ -73,7 +73,7 @@ Shared infra (docker-compose in my-service-infra):
 | my-service (Docker) | **8082** | 8081 | HTTP REST | Compose maps 8082→8081 |
 | my-service-cards (local) | **8083** | 8083 | HTTP REST | `application.yaml` |
 | my-service-cards (compose intent) | **8083** | maps to **8081** | HTTP REST | Port mismatch vs yaml |
-| Keycloak | **8085** | 8080 | HTTP | Admin: admin/admin |
+| Keycloak | **8085** | 8080 | HTTP | Admin from env |
 | PostgreSQL | **5435** | 5432 | TCP | User: postgres |
 | my-service-crypto | **50051** | 50051 | gRPC plaintext | AES-GCM |
 
@@ -165,14 +165,14 @@ my-service/
 | `server.port` | `8081` |
 | `spring.application.name` | `my-service` |
 | Datasource | `jdbc:postgresql://localhost:5435/myservicedb` |
-| DB user/password | `postgres` / `postgrespassword` |
+| DB user/password | from env (`SPRING_DATASOURCE_*`) — never commit secrets |
 | `jpa.hibernate.ddl-auto` | `none` (Flyway owns schema) |
 | JWT issuer | `http://localhost:8085/realms/my-service-realm` |
 | Keycloak server | `http://localhost:8085` |
 | Keycloak realm | `my-service-realm` |
 | Keycloak client | `my-service-backend` |
-| Keycloak client-secret | `nBBDagDMZTnaCMXm1bK4WRnrYZYQf5jd` |
-| Keycloak admin | `admin` / `admin` |
+| Keycloak client-secret | from env `KEYCLOAK_CLIENT_SECRET` |
+| Keycloak admin | from env `KEYCLOAK_ADMIN_*` |
 | gRPC crypto | `static://localhost:50051` (plaintext) |
 
 Docker env overrides: `SPRING_DATASOURCE_*`, JWT issuer URI, `GRPC_CLIENT_CRYPTO_HOST/PORT`.
@@ -314,7 +314,7 @@ Node 24 build → `nginx:alpine`. Nginx proxies `/api` **only** to `my-service-b
 
 ### Env highlights
 
-- Postgres: DB `myservicedb`, user/password `postgres` / `postgrespassword`
+- Postgres: DB `myservicedb`, credentials from env / infra `.env`
 - Keycloak: admin `admin`/`admin`, `start-dev --import-realm --insecure`
 - Crypto: `GRPC_PORT=50051`, `CRYPTO_SECRET_KEY` (base64 32-byte key)
 - Backend JWT issuer in compose: `http://keycloak:8080/realms/my-realm` ⚠️ (see known issues)
@@ -416,7 +416,7 @@ com.myservicecards.my_service_cards
 | Datasource | `jdbc:postgresql://localhost:5435/my_cards_db` |
 | JWT issuer | `http://localhost:8085/realms/my-service-realm` |
 | Keycloak client | `my-service-cards` |
-| Keycloak client-secret | `b5fy4R36oAG6bXUpQK0P461P2gZeBItC` |
+| Keycloak client-secret | from env `KEYCLOAK_CLIENT_SECRET` / infra `.env` |
 | gRPC | `localhost:50051` plaintext |
 
 ## REST API
